@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 class IncidenceRepository {
-    private val dbRef = FirebaseDatabase.getInstance().getReference("incidencias")
+    private val databaseUrl = "https://ecoreport-c201d-default-rtdb.firebaseio.com/"
+    private val dbRef = FirebaseDatabase.getInstance(databaseUrl).getReference("incidencias")
 
     // Escuchar lista reactiva en tiempo real (para TV y Móvil)
     fun getIncidencesFlow(): Flow<List<Incidence>> = callbackFlow {
