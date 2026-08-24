@@ -46,4 +46,7 @@ dependencies {
     implementation("androidx.tv:tv-foundation:1.0.0-alpha11")
     implementation("androidx.tv:tv-material:1.0.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    
+    // Coil para carga de imágenes
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }
