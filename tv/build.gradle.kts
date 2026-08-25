@@ -45,8 +45,13 @@ dependencies {
     implementation(libs.glide)
     implementation("androidx.tv:tv-foundation:1.0.0-alpha11")
     implementation("androidx.tv:tv-material:1.0.0")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-database-ktx")
+
     // Coil para carga de imágenes
     implementation("io.coil-kt:coil-compose:2.7.0")
 }

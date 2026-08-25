@@ -1,13 +1,19 @@
 package com.ejemplo.ecoreport.core.model
 
+import com.google.firebase.database.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class Incidence(
-    val id: String = "",
-    val title: String = "",
-    val description: String = "",
-    val category: String = "Infraestructura",
-    val priority: String = "Media",
-    val imageUrl: String = "",
-    val status: String = "Pendiente",
-    val timestamp: Long = System.currentTimeMillis(),
-    val location: String = ""
-)
+    var id: String = "",
+    var title: String = "",
+    var description: String = "",
+    var category: String = "Infraestructura",
+    var priority: String = "Media",
+    var imageUrl: String = "",
+    var status: String = "Pendiente",
+    var timestamp: Long = 0,
+    var location: String = ""
+) {
+    // Constructor sin argumentos necesario para Firebase
+    constructor() : this("", "", "", "Infraestructura", "Media", "", "Pendiente", 0, "")
+}
