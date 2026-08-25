@@ -5,26 +5,28 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.*
 import coil.compose.AsyncImage
 import com.ejemplo.ecoreport.core.model.Incidence
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -32,6 +34,8 @@ fun TvDashboardScreen(viewModel: TvIncidenceViewModel) {
     val allIncidences by viewModel.incidences.collectAsState()
     var selectedFilter by remember { mutableStateOf("Todos") }
     var selectedIncidence by remember { mutableStateOf<Incidence?>(null) }
+    
+    val menuFocusRequesters = remember { List(5) { FocusRequester() } }
 
     val filteredIncidences = remember(allIncidences, selectedFilter) {
         when (selectedFilter) {
@@ -43,59 +47,87 @@ fun TvDashboardScreen(viewModel: TvIncidenceViewModel) {
         }
     }
 
-    NavigationDrawer(
-        drawerContent = {
-            Column(
-                Modifier
-                    .fillMaxHeight()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                DrawerItem(selectedFilter == "Todos", "Todos", Icons.Default.List) { selectedFilter = "Todos" }
-                DrawerItem(selectedFilter == "Urgentes", "Urgentes", Icons.Default.Warning) { selectedFilter = "Urgentes" }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                DrawerItem(selectedFilter == "Pendientes", "Pendientes", Icons.Default.Info) { selectedFilter = "Pendientes" }
-                DrawerItem(selectedFilter == "En Proceso", "En Proceso", Icons.Default.Build) { selectedFilter = "En Proceso" }
-                DrawerItem(selectedFilter == "Resueltos", "Resueltos", Icons.Default.Check) { selectedFilter = "Resueltos" }
+    Row(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+        
+        // MENÚ LATERAL
+        Column(
+            modifier = Modifier
+                .width(260.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Eco, null, tint = Color(0xFF81C784), modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("ECO ADMIN", color = Color(0xFF81C784), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+            
+            Spacer(Modifier.height(20.dp))
+            
+            val menuOptions = listOf("Todos", "Urgentes", "Pendientes", "En Proceso", "Resueltos")
+            menuOptions.forEachIndexed { index, option ->
+                val isSelected = selectedFilter == option
+                Surface(
+                    onClick = { 
+                        selectedFilter = option
+                        selectedIncidence = null 
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .focusRequester(menuFocusRequesters[index]),
+                    shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
+                    colors = ClickableSurfaceDefaults.colors(
+                        containerColor = Color.Transparent, 
+                        focusedContainerColor = Color.White.copy(alpha = 0.12f)
+                    )
+                ) {
+                    Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.padding(horizontal = 12.dp)) {
+                        Text(
+                            text = option, 
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier.alpha(if (isSelected) 1f else 0.6f)
+                        )
+                    }
+                }
             }
         }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 48.dp, vertical = 32.dp)) {
-                Text(
-                    text = "EcoReport - $selectedFilter",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
 
-                Spacer(modifier = Modifier.height(24.dp))
+        // DASHBOARD
+        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+            Column(modifier = Modifier.padding(32.dp)) {
+                Text(
+                    text = "Gestión: $selectedFilter",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                
+                Spacer(Modifier.height(20.dp))
 
                 if (filteredIncidences.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No hay reportes en esta sección", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("No hay registros", color = Color.Gray)
                     }
                 } else {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        horizontalArrangement = Arrangement.spacedBy(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        columns = GridCells.Fixed(3),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(bottom = 32.dp)
                     ) {
-                        items(filteredIncidences) { incidence ->
+                        items(filteredIncidences, key = { it.id }) { incidence ->
                             IncidenceTvCard(incidence) { selectedIncidence = incidence }
                         }
                     }
                 }
             }
 
-            // Detalle con botones de gestión
+            // OVERLAY DE DETALLE CON FOCO AUTOMÁTICO
             selectedIncidence?.let { incidence ->
                 IncidenceDetailOverlay(
                     incidence = incidence,
@@ -112,89 +144,112 @@ fun TvDashboardScreen(viewModel: TvIncidenceViewModel) {
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun NavigationDrawerScope.DrawerItem(selected: Boolean, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    NavigationDrawerItem(
-        selected = selected,
-        onClick = onClick,
-        leadingContent = { Icon(icon, contentDescription = null) }
-    ) {
-        Text(label)
-    }
-}
+fun IncidenceDetailOverlay(incidence: Incidence, onClose: () -> Unit, onUpdateStatus: (String) -> Unit) {
+    val initialFocusRequester = remember { FocusRequester() }
 
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-fun IncidenceDetailOverlay(
-    incidence: Incidence, 
-    onClose: () -> Unit,
-    onUpdateStatus: (String) -> Unit
-) {
+    // Forzamos el foco inicial al abrir el detalle
+    LaunchedEffect(Unit) {
+        delay(100) // Pequeño retardo para que la UI termine de renderizarse
+        initialFocusRequester.requestFocus()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.85f))
-            .padding(64.dp),
+            .background(Color.Black.copy(alpha = 0.9f)),
         contentAlignment = Alignment.Center
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp)),
-            colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .fillMaxHeight(0.85f)
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(24.dp))
         ) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = incidence.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxHeight().weight(1.2f),
-                    contentScale = ContentScale.Crop
+            AsyncImage(
+                model = incidence.imageUrl, 
+                contentDescription = null, 
+                modifier = Modifier.fillMaxHeight().weight(1f), 
+                contentScale = ContentScale.Crop
+            )
+            
+            Column(
+                modifier = Modifier
+                    .weight(1.2f)
+                    .padding(24.dp)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState()), 
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = incidence.category.uppercase(), 
+                    color = Color(0xFF81C784), 
+                    style = MaterialTheme.typography.labelMedium, 
+                    fontWeight = FontWeight.Bold
                 )
-
-                Column(
-                    modifier = Modifier.weight(1f).padding(40.dp).fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(text = incidence.category.uppercase(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    Text(text = incidence.title, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold)
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        StatusTag(incidence.status)
-                        if (incidence.location.isNotBlank()) {
-                            Spacer(Modifier.width(16.dp))
-                            Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(Modifier.width(4.dp))
-                            Text(incidence.location, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                
+                Text(
+                    text = incidence.title, 
+                    style = MaterialTheme.typography.headlineMedium, 
+                    fontWeight = FontWeight.Black, 
+                    color = Color.White
+                )
+                
+                Text(
+                    text = "ESTADO: ${incidence.status.uppercase()}", 
+                    color = Color.Gray, 
+                    style = MaterialTheme.typography.labelSmall
+                )
+                
+                Text(
+                    text = incidence.description, 
+                    style = MaterialTheme.typography.bodyLarge, 
+                    color = Color.LightGray
+                )
+                
+                Spacer(Modifier.height(12.dp))
+                
+                Text("ACCIONES DISPONIBLES", style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontWeight = FontWeight.Bold)
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (incidence.status != "En Proceso") {
+                        Button(
+                            onClick = { onUpdateStatus("En Proceso") },
+                            modifier = Modifier.focusRequester(initialFocusRequester) // FOCO INICIAL AQUÍ
+                        ) {
+                            Icon(Icons.Default.PendingActions, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("GESTIONAR", fontSize = 14.sp)
                         }
                     }
-
-                    Text(text = incidence.description, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Text("GESTIONAR REPORTE", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        if (incidence.status != "En Proceso") {
-                            Button(onClick = { onUpdateStatus("En Proceso") }) {
-                                Icon(Icons.Default.Build, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Atender")
-                            }
+                    if (incidence.status != "Resuelto") {
+                        Button(
+                            onClick = { onUpdateStatus("Resuelto") },
+                            colors = ButtonDefaults.colors(containerColor = Color(0xFF43A047), contentColor = Color.White),
+                            modifier = if (incidence.status == "En Proceso") Modifier.focusRequester(initialFocusRequester) else Modifier
+                        ) {
+                            Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("FINALIZAR", fontSize = 14.sp)
                         }
-                        if (incidence.status != "Resuelto") {
-                            Button(
-                                onClick = { onUpdateStatus("Resuelto") },
-                                colors = ButtonDefaults.colors(containerColor = Color(0xFF4CAF50))
-                            ) {
-                                Icon(Icons.Default.Check, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Resolver")
-                            }
-                        }
-                    }
-
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Reportado: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(incidence.timestamp))}", style = MaterialTheme.typography.bodySmall)
-                        Button(onClick = onClose) { Text("Cerrar") }
                     }
                 }
+
+                OutlinedButton(
+                    onClick = onClose,
+                    modifier = Modifier.padding(top = 8.dp).then(
+                        if (incidence.status == "Resuelto") Modifier.focusRequester(initialFocusRequester) else Modifier
+                    )
+                ) {
+                    Text("REGRESAR AL PANEL", fontSize = 14.sp)
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = "Reportado: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(incidence.timestamp))}", 
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.DarkGray
+                )
             }
         }
     }
@@ -202,62 +257,33 @@ fun IncidenceDetailOverlay(
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun StatusTag(status: String) {
-    val color = when (status) {
-        "Pendiente" -> Color(0xFFFFD54F)
-        "En Proceso" -> Color(0xFF64B5F6)
-        else -> Color(0xFF81C784)
-    }
-    Surface(
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
-        colors = ClickableSurfaceDefaults.colors(containerColor = color.copy(alpha = 0.2f)),
-        onClick = {}
-    ) {
-        Text(
-            text = status,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            color = color,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
 fun IncidenceTvCard(incidence: Incidence, onClick: () -> Unit) {
-    val priorityColor = when (incidence.priority) {
-        "Alta" -> Color(0xFFE57373)
-        "Media" -> Color(0xFFFFB74D)
-        else -> Color(0xFF81C784)
-    }
-
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(280.dp),
+        modifier = Modifier.fillMaxWidth().height(240.dp),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f)
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
+        border = ClickableSurfaceDefaults.border(focusedBorder = Border(androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF81C784))))
     ) {
         Column {
-            Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
-                AsyncImage(model = incidence.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                Box(modifier = Modifier.padding(8.dp).background(priorityColor, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 4.dp).align(Alignment.TopEnd)) {
-                    Text(text = incidence.priority, style = MaterialTheme.typography.labelSmall, color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-            }
+            AsyncImage(model = incidence.imageUrl, contentDescription = null, modifier = Modifier.fillMaxWidth().height(130.dp), contentScale = ContentScale.Crop)
             Column(modifier = Modifier.padding(12.dp).fillMaxSize()) {
-                Text(text = incidence.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = incidence.category, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = incidence.title, 
+                    style = MaterialTheme.typography.titleMedium, 
+                    fontWeight = FontWeight.Bold, 
+                    maxLines = 1, 
+                    overflow = TextOverflow.Ellipsis, 
+                    color = Color.White
+                )
+                Text(text = incidence.category, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 Spacer(modifier = Modifier.weight(1f))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    val statusColor = when (incidence.status) {
-                        "Pendiente" -> Color(0xFFFFD54F)
-                        "En Proceso" -> Color(0xFF64B5F6)
-                        else -> Color(0xFF81C784)
-                    }
-                    Text(text = incidence.status, style = MaterialTheme.typography.labelMedium, color = statusColor)
-                    Text(text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(incidence.timestamp)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val statusColor = when(incidence.status) {
+                    "Pendiente" -> Color(0xFFFFB300)
+                    "En Proceso" -> Color(0xFF1E88E5)
+                    else -> Color(0xFF43A047)
                 }
+                Text(text = incidence.status.uppercase(), style = MaterialTheme.typography.labelSmall, color = statusColor, fontWeight = FontWeight.Black)
             }
         }
     }

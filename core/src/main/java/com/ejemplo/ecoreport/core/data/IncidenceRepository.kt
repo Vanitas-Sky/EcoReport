@@ -31,8 +31,18 @@ class IncidenceRepository {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val list = mutableListOf<Incidence>()
                 for (child in snapshot.children) {
-                    val item = child.getValue(Incidence::class.java)
-                    if (item != null) list.add(item)
+                    try {
+                        val item = child.getValue(Incidence::class.java)
+                        if (item != null) {
+                            // Si el reporte no tiene ID guardado internamente, usamos la key de Firebase
+                            if (item.id.isEmpty()) item.id = child.key ?: ""
+                            list.add(item)
+                        } else {
+                            android.util.Log.e("Firebase", "Failed to parse incidence at ${child.key}")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("Firebase", "Exception parsing incidence: ${e.message}")
+                    }
                 }
                 // Ordenar por fecha reciente
                 trySend(list.sortedByDescending { it.timestamp })
