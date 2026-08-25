@@ -1,5 +1,6 @@
 package com.example.ecoreport.ui
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ejemplo.ecoreport.core.data.IncidenceRepository
@@ -36,25 +37,39 @@ class MobileIncidenceViewModel(
         description: String,
         category: String,
         priority: String,
-        imageUrl: String,
+        imageUri: Uri?,
         onSuccess: () -> Unit
     ) {
         if (title.isBlank() || description.isBlank()) return
 
-        _isSaving.value = true
-        val newIncidence = Incidence(
-            title = title.trim(),
-            description = description.trim(),
-            category = category,
-            priority = priority,
-            imageUrl = imageUrl.ifBlank { "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=600&q=80" },
-            status = "Pendiente",
-            timestamp = System.currentTimeMillis()
-        )
+        viewModelScope.launch {
+            _isSaving.value = true
+            try {
+                // Subir imagen si existe, de lo contrario usar placeholder
+                val finalImageUrl = if (imageUri != null) {
+                    repository.uploadImage(imageUri)
+                } else {
+                    "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=600&q=80"
+                }
 
-        repository.saveIncidence(newIncidence) { success ->
-            _isSaving.value = false
-            if (success) onSuccess()
+                val newIncidence = Incidence(
+                    title = title.trim(),
+                    description = description.trim(),
+                    category = category,
+                    priority = priority,
+                    imageUrl = finalImageUrl,
+                    status = "Pendiente",
+                    timestamp = System.currentTimeMillis()
+                )
+
+                repository.saveIncidence(newIncidence) { success ->
+                    _isSaving.value = false
+                    if (success) onSuccess()
+                }
+            } catch (e: Exception) {
+                _isSaving.value = false
+                // Aquí podrías manejar el error con un StateFlow de error
+            }
         }
     }
 }

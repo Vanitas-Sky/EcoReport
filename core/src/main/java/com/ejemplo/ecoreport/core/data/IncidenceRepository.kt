@@ -5,13 +5,25 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import android.net.Uri
 
 class IncidenceRepository {
     private val databaseUrl = "https://ecoreport-c201d-default-rtdb.firebaseio.com/"
     private val dbRef = FirebaseDatabase.getInstance(databaseUrl).getReference("incidencias")
+    private val storageRef = FirebaseStorage.getInstance().reference.child("incidencias")
+
+    // Subir imagen a Firebase Storage
+    suspend fun uploadImage(uri: Uri): String {
+        val fileName = "img_${System.currentTimeMillis()}.jpg"
+        val imageRef = storageRef.child(fileName)
+        imageRef.putFile(uri).await()
+        return imageRef.downloadUrl.await().toString()
+    }
 
     // Escuchar lista reactiva en tiempo real (para TV y Móvil)
     fun getIncidencesFlow(): Flow<List<Incidence>> = callbackFlow {
