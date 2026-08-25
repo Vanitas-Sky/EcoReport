@@ -27,4 +27,10 @@ class TvIncidenceViewModel(
             }
         }
     }
+
+    fun updateStatus(id: String, newStatus: String) {
+        repository.updateIncidenceStatus(id, newStatus) { success ->
+            // Se actualiza en tiempo real vía Firebase
+        }
+    }
 }

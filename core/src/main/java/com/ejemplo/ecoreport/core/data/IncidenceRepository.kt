@@ -54,4 +54,12 @@ class IncidenceRepository {
             onComplete(task.isSuccessful)
         }
     }
+
+    // Actualizar solo el estado de una incidencia desde la TV
+    fun updateIncidenceStatus(id: String, newStatus: String, onComplete: (Boolean) -> Unit) {
+        if (id.isEmpty()) return
+        dbRef.child(id).child("status").setValue(newStatus).addOnCompleteListener { task ->
+            onComplete(task.isSuccessful)
+        }
+    }
 }

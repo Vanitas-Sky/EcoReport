@@ -4,9 +4,10 @@ data class Incidence(
     val id: String = "",
     val title: String = "",
     val description: String = "",
-    val category: String = "Infraestructura", // Limpieza, Fugas, Podas, etc.
-    val priority: String = "Media",            // Alta, Media, Baja
+    val category: String = "Infraestructura",
+    val priority: String = "Media",
     val imageUrl: String = "",
-    val status: String = "Pendiente",          // Pendiente, En Proceso, Resuelto
-    val timestamp: Long = System.currentTimeMillis()
+    val status: String = "Pendiente",
+    val timestamp: Long = System.currentTimeMillis(),
+    val location: String = ""
 )
