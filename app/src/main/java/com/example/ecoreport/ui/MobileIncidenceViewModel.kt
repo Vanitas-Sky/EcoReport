@@ -37,6 +37,7 @@ class MobileIncidenceViewModel(
         description: String,
         category: String,
         priority: String,
+        location: String,
         imageUri: Uri?,
         onSuccess: () -> Unit
     ) {
@@ -45,7 +46,6 @@ class MobileIncidenceViewModel(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                // Subir imagen si existe, de lo contrario usar placeholder
                 val finalImageUrl = if (imageUri != null) {
                     repository.uploadImage(imageUri)
                 } else {
@@ -57,6 +57,7 @@ class MobileIncidenceViewModel(
                     description = description.trim(),
                     category = category,
                     priority = priority,
+                    location = location.trim(),
                     imageUrl = finalImageUrl,
                     status = "Pendiente",
                     timestamp = System.currentTimeMillis()
@@ -68,7 +69,6 @@ class MobileIncidenceViewModel(
                 }
             } catch (e: Exception) {
                 _isSaving.value = false
-                // Aquí podrías manejar el error con un StateFlow de error
             }
         }
     }
