@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Background Gradient-like solid -->
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M0,0h320v180h-320z" />
+
+    <!-- Logo Circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,90m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+
+    <!-- Leaf in circle -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M60,75c-5,0 -9,4 -9,9s4,9 9,9 9,-4 9,-9 -4,-9 -9,-9z" />
+
+    <!-- Text Placeholder for EcoReport (Simple shapes) -->
+    <!-- 'E' -->
+    <path android:fillColor="#FFFFFF" android:pathData="M110,70h20v4h-16v6h14v4h-14v6h16v4h-20z" />
+    <!-- 'c' -->
+    <path android:fillColor="#FFFFFF" android:pathData="M140,80h15v4h-11v10h11v4h-15z" />
+    <!-- 'o' -->
+    <path android:fillColor="#FFFFFF" android:pathData="M165,80h15v18h-15zM169,84h7v10h-7z" />
+    <!-- 'R' -->
+    <path android:fillColor="#FFFFFF" android:pathData="M190,70h12c5,0 8,3 8,8s-3,8 -8,8h-8v8h-4zM194,74v8h8c3,0 4,-2 4,-4s-1,-4 -4,-4z" />
+</vector>
